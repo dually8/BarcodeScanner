@@ -205,11 +205,13 @@
 //--------------------------------------------------------------------------
 - (void)returnSuccess:(NSString*)scannedText format:(NSString*)format metadata:(NSMutableDictionary*)metadata cancelled:(BOOL)cancelled flipped:(BOOL)flipped callback:(NSString*)callback{
     NSNumber* cancelledNumber = [NSNumber numberWithInt:(cancelled?1:0)];
-    
+    NSString* upcEanExtension5 = [metadata objectForKey:@(kResultMetadataTypeSuggestedPrice)];
+    NSString* upcEanExtension2 = [metadata objectForKey:@(kResultMetadataTypeIssueNumber)];
+
     NSMutableDictionary* resultDict = [[NSMutableDictionary alloc] init];
     [resultDict setObject:scannedText     forKey:@"text"];
     [resultDict setObject:format          forKey:@"format"];
-    [resultDict setObject:metadata        forKey:@"metadata"];
+    [resultDict setObject:(upcEanExtension5 != nil ? upcEanExtension5 : (upcEanExtension2 != nil ? upcEanExtension2 : [NSNull null])) forKey:@"UPC_EAN_Extension"];
     [resultDict setObject:cancelledNumber forKey:@"cancelled"];
     
     CDVPluginResult* result = [CDVPluginResult
