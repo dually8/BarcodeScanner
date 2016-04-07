@@ -209,7 +209,7 @@
     NSMutableDictionary* resultDict = [[NSMutableDictionary alloc] init];
     [resultDict setObject:scannedText     forKey:@"text"];
     [resultDict setObject:format          forKey:@"format"];
-		[resultDict setObject:metadata				forKey:@"metadata"];
+    [resultDict setObject:metadata        forKey:@"metadata"];
     [resultDict setObject:cancelledNumber forKey:@"cancelled"];
     
     CDVPluginResult* result = [CDVPluginResult
@@ -536,7 +536,7 @@ parentViewController:(UIViewController*)parentViewController
         NSString *resultText = result.text;
         ZXBarcodeFormat formatVal = result.barcodeFormat;
         NSString *format = [self formatStringFrom:formatVal];
-				NSMutableDictionary *resultMetadata = result.resultMetadata;
+        NSMutableDictionary *resultMetadata = result.resultMetadata;
         
         // clean up
         CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
