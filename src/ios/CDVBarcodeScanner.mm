@@ -48,7 +48,7 @@
 - (void)scan:(CDVInvokedUrlCommand*)command;
 - (void)encode:(CDVInvokedUrlCommand*)command;
 - (void)returnImage:(NSString*)filePath format:(NSString*)format callback:(NSString*)callback;
-- (void)returnSuccess:(NSString*)scannedText format:(NSString*)format cancelled:(BOOL)cancelled flipped:(BOOL)flipped callback:(NSString*)callback;
+- (void)returnSuccess:(NSString*)scannedText format:(NSString*)format metadata:(NSMutableDictionary*)metadata cancelled:(BOOL)cancelled flipped:(BOOL)flipped callback:(NSString*)callback;
 - (void)returnError:(NSString*)message callback:(NSString*)callback;
 @end
 
@@ -73,7 +73,7 @@
 
 - (id)initWithPlugin:(CDVBarcodeScanner*)plugin callback:(NSString*)callback parentViewController:(UIViewController*)parentViewController alterateOverlayXib:(NSString *)alternateXib;
 - (void)scanBarcode;
-- (void)barcodeScanSucceeded:(NSString*)text format:(NSString*)format;
+- (void)barcodeScanSucceeded:(NSString*)text format:(NSString*)format metadata:(NSMutableDictionary*)metadata;
 - (void)barcodeScanFailed:(NSString*)message;
 - (void)barcodeScanCancelled;
 - (void)openDialog;
@@ -203,12 +203,14 @@
 }
 
 //--------------------------------------------------------------------------
-- (void)returnSuccess:(NSString*)scannedText format:(NSString*)format cancelled:(BOOL)cancelled flipped:(BOOL)flipped callback:(NSString*)callback{
+- (void)returnSuccess:(NSString*)scannedText format:(NSString*)format metadata:(NSMutableDictionary*)metadata cancelled:(BOOL)cancelled flipped:(BOOL)flipped callback:(NSString*)callback{
     NSNumber* cancelledNumber = [NSNumber numberWithInt:(cancelled?1:0)];
-    
+    NSString* upcEanExtension = [metadata objectForKey:@(kResultMetadataTypeUPCEANExtension)];
+
     NSMutableDictionary* resultDict = [[NSMutableDictionary alloc] init];
     [resultDict setObject:scannedText     forKey:@"text"];
     [resultDict setObject:format          forKey:@"format"];
+    [resultDict setObject:(upcEanExtension != nil ? upcEanExtension : [NSNull null]) forKey:@"UPC_EAN_Extension"];
     [resultDict setObject:cancelledNumber forKey:@"cancelled"];
     
     CDVPluginResult* result = [CDVPluginResult
@@ -362,11 +364,11 @@ parentViewController:(UIViewController*)parentViewController
 }
 
 //--------------------------------------------------------------------------
-- (void)barcodeScanSucceeded:(NSString*)text format:(NSString*)format {
+- (void)barcodeScanSucceeded:(NSString*)text format:(NSString*)format metadata:(NSMutableDictionary*)metadata {
     dispatch_sync(dispatch_get_main_queue(), ^{
         [self barcodeScanDone];
         AudioServicesPlaySystemSound(_soundFileObject);
-        [self.plugin returnSuccess:text format:format cancelled:FALSE flipped:FALSE callback:self.callback];
+        [self.plugin returnSuccess:text format:format metadata:metadata cancelled:FALSE flipped:FALSE callback:self.callback];
     });
 }
 
@@ -379,7 +381,7 @@ parentViewController:(UIViewController*)parentViewController
 //--------------------------------------------------------------------------
 - (void)barcodeScanCancelled {
     [self barcodeScanDone];
-    [self.plugin returnSuccess:@"" format:@"" cancelled:TRUE flipped:self.isFlipped callback:self.callback];
+    [self.plugin returnSuccess:@"" format:@"" metadata:nil cancelled:TRUE flipped:self.isFlipped callback:self.callback];
     if (self.isFlipped) {
         self.isFlipped = NO;
     }
@@ -390,7 +392,7 @@ parentViewController:(UIViewController*)parentViewController
 {
     self.isFlipped = YES;
     self.isFrontCamera = !self.isFrontCamera;
-    [self performSelector:@selector(barcodeScanCancelled) withObject:nil afterDelay:0];
+    [self performSelector:@selector(barcodeScanDone) withObject:nil afterDelay:0];
     [self performSelector:@selector(scanBarcode) withObject:nil afterDelay:0.1];
 }
 
@@ -535,13 +537,14 @@ parentViewController:(UIViewController*)parentViewController
         NSString *resultText = result.text;
         ZXBarcodeFormat formatVal = result.barcodeFormat;
         NSString *format = [self formatStringFrom:formatVal];
+        NSMutableDictionary *resultMetadata = result.resultMetadata;
         
         // clean up
         CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
         CGImageRelease(imageToDecode);
         
         if([self checkResult:resultText]) {
-            [self barcodeScanSucceeded:resultText format:format];
+            [self barcodeScanSucceeded:resultText format:format metadata:resultMetadata];
         }
         
         
