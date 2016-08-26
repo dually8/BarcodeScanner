@@ -983,17 +983,17 @@ parentViewController:(UIViewController*)parentViewController
 
 - (BOOL)shouldAutorotate
 {
-    return NO;
+    return YES;
 }
 
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation
 {
-    return UIInterfaceOrientationPortrait;
+    return [[UIApplication sharedApplication] statusBarOrientation];
 }
 
 - (NSUInteger)supportedInterfaceOrientations
 {
-    return UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAll;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -1001,20 +1001,28 @@ parentViewController:(UIViewController*)parentViewController
     if ((self.orientationDelegate != nil) && [self.orientationDelegate respondsToSelector:@selector(shouldAutorotateToInterfaceOrientation:)]) {
         return [self.orientationDelegate shouldAutorotateToInterfaceOrientation:interfaceOrientation];
     }
-    
+
     return YES;
 }
 
 - (void) willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)orientation duration:(NSTimeInterval)duration
 {
-    [CATransaction begin];
-    
-    self.processor.previewLayer.connection.videoOrientation = orientation;
-    [self.processor.previewLayer layoutSublayers];
-    self.processor.previewLayer.frame = self.view.bounds;
-    
-    [CATransaction commit];
-    [super willAnimateRotationToInterfaceOrientation:orientation duration:duration];
+    [UIView setAnimationsEnabled:NO];
+    AVCaptureVideoPreviewLayer* previewLayer = self.processor.previewLayer;
+    previewLayer.frame = self.view.bounds;
+
+    if (orientation == UIInterfaceOrientationLandscapeLeft) {
+        [previewLayer setOrientation:AVCaptureVideoOrientationLandscapeLeft];
+    } else if (orientation == UIInterfaceOrientationLandscapeRight) {
+        [previewLayer setOrientation:AVCaptureVideoOrientationLandscapeRight];
+    } else if (orientation == UIInterfaceOrientationPortrait) {
+        [previewLayer setOrientation:AVCaptureVideoOrientationPortrait];
+    } else if (orientation == UIInterfaceOrientationPortraitUpsideDown) {
+        [previewLayer setOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
+    }
+
+    previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    [UIView setAnimationsEnabled:YES];
 }
 
 @end
