@@ -27,6 +27,9 @@
             <param name="ios-package" value="CDVBarcodeScanner" />
         </feature>
     </config-file>
+    <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+        <string>Used for scanning</string>
+    </config-file>
     <resource-file src="src/ios/scannerOverlay.xib" />
     <resource-file src="src/ios/CDVBarcodeScanner.bundle" />
     <header-file src="src/ios/ZXingObjC/aztec/decoder/ZXAztecDecoder.h" target-dir="ZXingObjC/aztec/decoder" />
@@ -266,7 +269,7 @@
     <header-file src="src/ios/ZXingObjC/ZXingObjC.h" target-dir="ZXingObjC/" />
     <header-file src="src/ios/ZXingObjC/ZXMultiFormatReader.h" target-dir="ZXingObjC/" />
     <header-file src="src/ios/ZXingObjC/ZXMultiFormatWriter.h" target-dir="ZXingObjC/" />
-    
+
     <source-file src="src/ios/ZXingObjC/aztec/decoder/ZXAztecDecoder.m" target-dir="ZXingObjC/aztec/decoder" />
     <source-file src="src/ios/ZXingObjC/aztec/detector/ZXAztecDetector.m" target-dir="ZXingObjC/aztec/detector" />
     <source-file src="src/ios/ZXingObjC/aztec/encoder/ZXAztecBinaryShiftToken.m" target-dir="ZXingObjC/aztec/encoder" />
